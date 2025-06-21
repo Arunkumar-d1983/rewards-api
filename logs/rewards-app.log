@@ -1,0 +1,9 @@
+2025-06-22 00:56:24 - Starting RewardsApplication using Java 1.8.0_181 on DESKTOP-U55B6U2 with PID 21952 (E:\rewards-api\target\classes started by Arun in E:\rewards-api)
+2025-06-22 00:56:24 - No active profile set, falling back to 1 default profile: "default"
+2025-06-22 00:56:24 - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-06-22 00:56:24 - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-06-22 00:56:27 - Tomcat initialized with port(s): 8080 (http)
+2025-06-22 00:56:27 - Starting service [Tomcat]
+2025-06-22 00:56:27 - Starting Servlet engine: [Apache Tomcat/9.0.63]
+2025-06-22 00:56:27 - Initializing Spring embedded WebApplicationContext
+2025-06-22 00:56:27 - Root WebApplicationContext: initialization completed in 3224 ms
