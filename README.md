@@ -47,12 +47,12 @@ java -jar customer-rewards-api-0.0.1-SNAPSHOT
 
 ## Design Overview
 ➤ Design Details:
-   - **Controller Layer** (`RewardController`): Handles HTTP requests, performs request validation, and invokes the service layer asynchronously using CompletableFuture.
-   - Service Layer (RewardService): Contains the business logic to calculate reward points from transactions and aggregate them monthly.
-   - Model Layer (Customer, Transaction): Defines the structure for request payloads and business objects.
-   - DTO Layer (RewardResponse, BulkRewardResponse): Used to format and return response data in a structured way.
-   - Utility Layer (RewardCalculator): Encapsulates the core reward point calculation logic.
-   - Exception Handling (CustomExceptionHandler): Provides centralized error responses with meaningful messages and HTTP status codes.
+   - **Controller Layer** (`RewardController`): Handles HTTP requests, performs request validation, and invokes the service layer asynchronously using `CompletableFuture`.
+   - **Service Layer** (`RewardService`): Contains the business logic to calculate reward points from transactions and aggregate them monthly.
+   - **Model Layer** (`Customer, Transaction`): Defines the structure for request payloads and business objects.
+   - **DTO Layer** (`RewardResponse, BulkRewardResponse`): Used to format and return response data in a structured way.
+   - **Utility Layer** (`RewardCalculator`): Encapsulates the core reward point calculation logic.
+   - **Exception Handling** (`CustomExceptionHandler`): Provides centralized error responses with meaningful messages and HTTP status codes.
 
 ➤ Points Calculation Logic:
    1. point for each dollar between $50 and $100
@@ -73,15 +73,15 @@ Transactions:
    4. Return enhanced reward response
 
 #### Technical Details:
-   - Java Version: JDK 8
-   - Framework: Spring Boot 2.7.0
-   - Maven: Build tool for compiling, packaging, and dependency management.
-   - Logging: SLF4J is used throughout the application for consistent, structured logging, integrated with Spring Boot’s logging support.
-   - JUnit: Unit testing framework used to validate application logic.
-   - Validation: Jakarta Bean Validation (JSR-380) is used across models to enforce input constraints.
-   - Asynchronous Execution: Implemented using Spring's @Async annotation and CompletableFuture to handle concurrent reward calculations, especially in bulk operations.
-   - Date Handling: Uses java.time.LocalDate with @DateTimeFormat for ISO-compliant query parameters.
-   - Error Handling: Global exception handling is implemented using @RestControllerAdvice to capture and format validation errors, illegal arguments, and unexpected server errors.
+   - **Java Version**: JDK 8
+   - **Framework**: Spring Boot 2.7.0
+   - **Maven**: Build tool for compiling, packaging, and dependency management.
+   - **Logging**: SLF4J is used throughout the application for consistent, structured logging, integrated with Spring Boot’s logging support.
+   - **JUnit**: Unit testing framework used to validate application logic.
+   - **Validation**: Jakarta Bean Validation (JSR-380) is used across models to enforce input constraints.
+   - **Asynchronous Execution**: Implemented using Spring's `@Async` annotation and `CompletableFuture` to handle concurrent reward calculations, especially in bulk operations.
+   - **Date Handling**: Uses `java.time.LocalDate` with `@DateTimeFormat` for ISO-compliant query parameters.
+   - **Error Handling**: Global exception handling is implemented using `@RestControllerAdvice` to capture and format validation errors, illegal arguments, and unexpected server errors.
      
 ## API Endpoint
 ### 1. POST /api/rewards
