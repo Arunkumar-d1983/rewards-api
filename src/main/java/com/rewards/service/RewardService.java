@@ -23,7 +23,14 @@ public class RewardService {
             LocalDate endDate) {
         logger.info("Calculating rewards for customerId={} between {} and {}", customer.getCustomerId(), startDate,
                 endDate);
-
+        
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error("Data fetch interrupted", e);
+        }
+        
         if (customer == null || customer.getTransactions() == null) {
             logger.error("Customer and transaction list must not be null for customerId={}", customer.getCustomerId());
             throw new IllegalArgumentException("Customer and transaction list must not be null");
