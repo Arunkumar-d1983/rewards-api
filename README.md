@@ -33,7 +33,7 @@ This is a Spring Boot-based RESTful API for a Retail Rewards Program. It calcula
 | Spring Boot        | 2.7.0                   |
 | Maven              | Build Tool              |
 | SLF4J              | Logging                 |
-| JUnit 5            | Testing                 |
+| JUnit              | Testing                 |
 | Jakarta Validation | Input validation        |
 
 
