@@ -47,7 +47,7 @@ java -jar customer-rewards-api-0.0.1-SNAPSHOT
 
 ## Design Overview
 ➤ Design Details:
-   - Controller Layer (RewardController): Handles HTTP requests, performs request validation, and invokes the service layer asynchronously using CompletableFuture.
+   - **Controller Layer** (`RewardController`): Handles HTTP requests, performs request validation, and invokes the service layer asynchronously using CompletableFuture.
    - Service Layer (RewardService): Contains the business logic to calculate reward points from transactions and aggregate them monthly.
    - Model Layer (Customer, Transaction): Defines the structure for request payloads and business objects.
    - DTO Layer (RewardResponse, BulkRewardResponse): Used to format and return response data in a structured way.
