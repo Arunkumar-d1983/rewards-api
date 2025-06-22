@@ -25,7 +25,7 @@ This is a Spring Boot-based RESTful API for a Retail Rewards Program. It calcula
 - Input validation & centralized exception handling
 - Java 8 compatible
 
-#### Technology Stack
+#### Technology Stack:
 
 | Tool               | Version                 |
 | ------------------ | ----------------------- |
