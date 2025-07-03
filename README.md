@@ -1,72 +1,87 @@
-# Rewards API
+# Customer Rewards API
 
 ### Project Overview
-This is a Spring Boot-based RESTful API for a Retail Rewards Program. It calculates customer reward points based on purchase transactions using a tiered reward system:
+This is a **Spring Boot**-based RESTful API for a **Retail Rewards Program**. It calculates customer reward points based on purchase transactions using a tiered reward system:
 
-- 2 points per dollar spent over $100
-- 1 point per dollar spent between $50–$100
-- No points for purchases ≤ $50
+### Reward Rules
+- **2 points** per dollar spent **over $100**
+- **1 point** per dollar spent **between $50 and $100**
+- **0 points** for purchases **≤ $50**
+> Example:  
+> $120 purchase → (120 - 100) × 2 + (100 - 50) × 1 = **90 points**
 
-#### Clone the Repository
-``` git clone https://github.com/Arunkumar-d1983/rewards-api.git ```
-
-#### Prerequisites:
-
-- Ensure that JDK 1.8 or higher is installed on your machine.If Java is not installed or the version is lower than 1.8, you need to install JDK 1.8 
-    * Visit the Oracle JDK download page: [Oracle JDK Download](https://www.oracle.com/java/technologies/downloads/#java8).
-    * After the installation is complete, verify the Java version again using the `java -version` command to ensure that JDK 1.8
-- Verify that you have Apache Maven installed. You can check by running `mvn -version` in your command line.
-- Install Postman or any other API testing tool.
-
-#### The API supports:
-- Dynamic time-frame filtering (start, end dates)
-- Monthly breakdown of rewards
-- Async reward calculation
-- Input validation & centralized exception handling
-- Java 8 compatible
-
-#### Technology Stack
-
+## Technology Stack
 | Tool               | Version                 |
 | ------------------ | ----------------------- |
 | Java               | 8                       |
 | Spring Boot        | 2.7.0                   |
 | Maven              | Build Tool              |
 | SLF4J              | Logging                 |
-| JUnit 5            | Testing                 |
+| JUnit              | Testing                 |
 | Jakarta Validation | Input validation        |
 
+## Getting Started
+
+#### Prerequisites:
+- Ensure that JDK 1.8 or higher is installed on your machine.If Java is not installed or the version is lower than 1.8, you need to install JDK 1.8 
+    * Visit the Oracle JDK download page: [Oracle JDK Download](https://www.oracle.com/java/technologies/downloads/#java8).
+    * After the installation is complete, verify the Java version again using the `java -version` command to ensure that JDK 1.8
+- Verify that you have Apache Maven installed. You can check by running `mvn -version` in your command line.
+- Install Postman or any other API testing tool.
+
+#### Clone the Repository
+```bash
+git clone https://github.com/Arunkumar-d1983/rewards-api.git
+cd rewards-api
+```
+
+#### The service supports:
+- Reward calculation for the past 3 months
+- Monthly reward breakdown
+- Customer and transaction management
+- Async processing for performance
+- Input validation and centralized exception handling
+- Java 8 compatible
 
 #### Build the application:
-
 - Open a command and navigate to the root directory of the mbean application project.
 - Run the following command to build the application.
   
 Build and Run :
+
+Build and Run (Option 1 – via Maven)
 ```
 mvn spring-boot:run
 ```
 (OR)
 
+Build and Run (Option 2 – via JAR)
 ```
 mvn clean package
 
 After the build is successful and the JAR file is generated, navigate to the target
 directory and run the following command to execute it.
 
+cd target
 java -jar customer-rewards-api-0.0.1-SNAPSHOT
+```
+#### Running Tests
+To verify that the application works correctly and passes all tests, run:
+``` 
+mvn verify
 ```
 
 ## Design Overview
 ➤ Design Details:
-| Component          | Description                                                 |
-| ------------------ | ----------------------------------------------------------- |
-| `RewardController` | REST controller exposing `/api/rewards` endpoint.           |
-| `RewardService`    | Business logic for filtering and calculating reward points. |
-| `RewardCalculator` | Utility class for computing points from amount.             |
-| `RewardResponse`   | DTO for returning detailed monthly and total reward data.   |
-| `Transaction`      | Represents each customer transaction.                       |
-| `Customer`         | Represents a customer and their transaction history.        |
+| Component            | Description                                                 |
+| -------------------- | ----------------------------------------------------------- |
+| `RewardController`   | REST controller exposing `/api/rewards` endpoint.           |
+| `RewardService`      | Business logic for filtering and calculating reward points. |
+| `RewardCalculator`   | Utility to calculate reward points from transaction amount. |
+| `Customer`           | Represents a customer and their transaction history.        |
+| `Transaction`        | Represents each customer transaction.                       |
+| `RewardResponse`     | DTO for returning detailed monthly and total reward data.   |
+| `CustomerRepository` | In-memory store for managing customer records               |
 
 ➤ Points Calculation Logic:
    1. point for each dollar between $50 and $100
@@ -75,27 +90,23 @@ java -jar customer-rewards-api-0.0.1-SNAPSHOT
 
 > Example : $120 purchase = (120-100)*2 + (100-50)*1 = **90 points**
 
-## Example
-Transactions:
-- $75 on 2025-05-15 → 25 pts
-- $120 on 2025-06-01 → 90 pts
-
-➤ API Flow:
-   1. Accept Customer data with transaction list
-   2. Filter transactions in the time frame (start to end, default 3 months)
-   3. Calculate monthly and total points
-   4. Return enhanced reward response
+➤ Reward Points Calculation Flow:
+   1. Accept input customer data and transaction list
+   2. Filter transactions within the past 3 months
+   3. For each transaction, compute reward points using the tiered logic
+   4. Group points by month (Year-Month format)
+   5. Return a response including monthly and total reward points
 
 
 ## API Endpoint
-### 1. POST /api/rewards
+### 1.POST /api/rewards/customers
 
-Description: Calculates reward points for a given customer.
+Description: Add a new customer
 
-### Example Request:
-``` POST http://localhost:8080/api/rewards?start=2025-04-01&end=2025-06-20 ```
+### Example URL :
+``` POST http://localhost:8080/api/rewards/customers ```
 
-### Request Body:
+### Request Body :
 ```json
 {
   "customerName": "Arunkumar",
@@ -103,27 +114,12 @@ Description: Calculates reward points for a given customer.
   "transactions": [
     {
       "transactionId": 1,
-      "transactionDate": "2025-04-15",
-      "amount": 60.0
-    },
-    {
-      "transactionId": 2,
-      "transactionDate": "2025-05-20",
-      "amount": 75.0
-    },
-    {
-      "transactionId": 3,
-      "transactionDate": "2025-06-01",
+      "transactionDate": "2025-05-15",
       "amount": 120.0
     },
     {
-      "transactionId": 4,
-      "transactionDate": "2025-06-10",
-      "amount": 45.0
-    },
-    {
-      "transactionId": 5,
-      "transactionDate": "2025-06-15",
+      "transactionId": 2,
+      "transactionDate": "2025-06-20",
       "amount": 90.0
     }
   ]
@@ -134,127 +130,96 @@ Description: Calculates reward points for a given customer.
 {
     "customerName": "Arunkumar",
     "customerId": 1001,
-    "monthlyPoints": {
-        "2025-05": 25,
-        "2025-04": 10,
-        "2025-06": 130
-    },
-    "totalPoints": 165,
     "transactions": [
         {
             "transactionId": 1,
-            "transactionDate": "2025-04-15",
-            "amount": 60.0,
-            "points": 10
+            "transactionDate": "2025-05-15",
+            "amount": 120,
+            "points": 0
         },
         {
             "transactionId": 2,
-            "transactionDate": "2025-05-20",
-            "amount": 75.0,
-            "points": 25
-        },
-        {
-            "transactionId": 3,
-            "transactionDate": "2025-06-01",
-            "amount": 120.0,
-            "points": 90
-        },
-        {
-            "transactionId": 5,
-            "transactionDate": "2025-06-15",
-            "amount": 90.0,
-            "points": 40
+            "transactionDate": "2025-06-20",
+            "amount": 90,
+            "points": 0
         }
     ]
 }
 ```
-### Root Cause: Points Logic
-| Transaction ID  | Date       | Amount | Points Calculation Description | Points |
-| --------------- | ---------- | ------ | ------------------------------ | ------ |
-| 1               | 2025-04-15 | 60.0   | (60 − 50) × 1 = 10             | 10     |
-| 2               | 2025-05-20 | 75.0   | (75 − 50) × 1 = 25             | 25     |
-| 3               | 2025-06-01 | 120.0  | (120 − 100) × 2 = 40 + 50 = 90 | 90     |
-| 5               | 2025-06-15 | 90.0   | ($90 - $50) × 1 = 40           | 40     |
+### 2.POST /api/rewards/customers/{customerId}/transactions
 
-### 2. POST /api/rewards/bulk
-### Example Request:
-``` http://localhost:8080/api/rewards/bulk?start=2025-04-01&end=2025-06-20 ```
+Description: Add a new transaction to an existing customer.
 
-### Request Body: 
+### Example URL :
+``` POST http://localhost:8080/api/rewards/customers/1001/transactions ```
+
+### Request Body : 
 ```json
-[
-  {
-    "customerName": "Arunkumar",
-    "customerId": 1001,
-    "transactions": [
-      { "transactionId": 1, "transactionDate": "2025-04-15", "amount": 60.0 },
-      { "transactionId": 2, "transactionDate": "2025-05-20", "amount": 75.0 }
-    ]
-  },
-  {
-    "customerName": "Kannan",
-    "customerId": 1002,
-    "transactions": [
-      { "transactionId": 3, "transactionDate": "2025-06-01", "amount": 120.0 },
-      { "transactionId": 4, "transactionDate": "2025-06-10", "amount": 45.0 },
-      { "transactionId": 5, "transactionDate": "2025-06-15", "amount": 90.0 }
-    ]
-  }
-]
+{
+  "transactionId": 3,
+  "transactionDate": "2025-07-02",
+  "amount": 70.0
+}
 ```
 ### Sample Response :
 ```json
 {
-    "customers": [
+    "customerName": "Arunkumar",
+    "customerId": 1001,
+    "transactions": [
         {
-            "customerName": "Arunkumar",
-            "customerId": 1001,
-            "monthlyPoints": {
-                "2025-05": 25,
-                "2025-04": 10
-            },
-            "totalPoints": 35,
-            "transactions": [
-                {
-                    "transactionId": 1,
-                    "transactionDate": "2025-04-15",
-                    "amount": 60.0,
-                    "points": 10
-                },
-                {
-                    "transactionId": 2,
-                    "transactionDate": "2025-05-20",
-                    "amount": 75.0,
-                    "points": 25
-                }
-            ]
+            "transactionId": 1,
+            "transactionDate": "2025-05-15",
+            "amount": 120,
+            "points": 0
         },
         {
-            "customerName": "Kannan",
-            "customerId": 1002,
-            "monthlyPoints": {
-                "2025-06": 130
-            },
-            "totalPoints": 130,
-            "transactions": [
-                {
-                    "transactionId": 3,
-                    "transactionDate": "2025-06-01",
-                    "amount": 120.0,
-                    "points": 90
-                },
-                {
-                    "transactionId": 5,
-                    "transactionDate": "2025-06-15",
-                    "amount": 90.0,
-                    "points": 40
-                }
-            ]
+            "transactionId": 2,
+            "transactionDate": "2025-06-20",
+            "amount": 90,
+            "points": 0
+        },
+        {
+            "transactionId": 3,
+            "transactionDate": "2025-07-02",
+            "amount": 75,
+            "points": 0
         }
     ]
 }
 ```
-## Logging Setup
+### 3.GET /api/rewards/customers/customerRewards/{customerId}
+
+Description: Returns reward points for a specific customer over the last 3 months.
+
+### Example URL :
+``` GET http://localhost:8080/api/rewards/customerRewards/1001 ```
+### Sample Response :
+```json
+{
+  "customerName": "Arunkumar",
+  "customerId": 1001,
+  "monthlyRewards": [
+    { "year": 2025, "month": "APRIL", "points": 10 },
+    { "year": 2025, "month": "MAY", "points": 25 },
+    { "year": 2025, "month": "JUNE", "points": 130 }
+  ],
+  "totalPoints": 165
+}
+```
+
+### Root Cause: Points Logic
+| Transaction ID  | Date       | Amount | Points Calculation Description | Points |
+| --------------- | ---------- | ------ | ------------------------------ | ------ |
+| 1               | 2025-05-15 | 120.0  | (120 − 100) × 2 = 40 + 50 = 90 | 90     |
+| 2               | 2025-06-20 | 90.0   | ($90 - $50) × 1 = 40           | 40     |
+| 3               | 2025-07-02 | 75.0   | (75 − 50) × 1 = 25             | 25     |
+
+
+## Logging Configuration
+
+Logging is configured in application.properties:
+
 ### application.properties
 ```
 logging.level.root=INFO
@@ -264,4 +229,9 @@ logging.file.name=logs/rewards-app.log
 logging.pattern.file=%d{yyyy-MM-dd HH:mm:ss} - %msg%n
 ```
 
+- Console logs are disabled.
+- All logs are written to logs/rewards-app.log
+- Debug logs include transaction, reward calculation, and service flow.
+
 All logs will be written to logs/rewards-app.log. Console output is disabled.
+

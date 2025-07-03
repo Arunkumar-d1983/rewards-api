@@ -1,66 +1,59 @@
 package com.rewards.dto;
 
-import com.rewards.model.Transaction;
-
+import lombok.*;
 import java.util.List;
-import java.util.Map;
 
+/**
+ * Response object representing the reward details for a customer.
+ * Contains total reward points earned over the last 3 months,
+ * and a breakdown of points earned each month.
+ */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class RewardResponse {
+    /**
+     * Name of the customer.
+     */
     private String customerName;
+
+    /**
+     * Unique identifier of the customer.
+     */
     private int customerId;
-    private Map<String, Integer> monthlyPoints;
+
+    /**
+     * List of monthly reward summaries over the past 3 months.
+     */
+    private List<MonthlyReward> monthlyRewards;
+
+    /**
+     * Total reward points accumulated across all months.
+     */
     private int totalPoints;
-    private List<Transaction> transactions;
 
-    public RewardResponse() {
-    }
+    /**
+     * Inner static class representing reward points for a specific year and month.
+     */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MonthlyReward {
+        /**
+         * The year for which the rewards were calculated.
+         */
+        private int year;
 
-    public RewardResponse(String customerName, int customerId, Map<String, Integer> monthlyPoints, int totalPoints,
-            List<Transaction> transactions) {
-        this.customerName = customerName;
-        this.customerId = customerId;
-        this.monthlyPoints = monthlyPoints;
-        this.totalPoints = totalPoints;
-        this.transactions = transactions;
-    }
+        /**
+         * The month name (e.g., "July", "August").
+         */
+        private String month;
 
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public int getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(int customerId) {
-        this.customerId = customerId;
-    }
-
-    public Map<String, Integer> getMonthlyPoints() {
-        return monthlyPoints;
-    }
-
-    public void setMonthlyPoints(Map<String, Integer> monthlyPoints) {
-        this.monthlyPoints = monthlyPoints;
-    }
-
-    public int getTotalPoints() {
-        return totalPoints;
-    }
-
-    public void setTotalPoints(int totalPoints) {
-        this.totalPoints = totalPoints;
-    }
-
-    public List<Transaction> getTransactions() {
-        return transactions;
-    }
-
-    public void setTransactions(List<Transaction> transactions) {
-        this.transactions = transactions;
+        /**
+         * Total reward points earned in the specific month.
+         */
+        private int points;
     }
 }

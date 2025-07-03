@@ -1,111 +1,73 @@
 package com.rewards.controller;
 
-import com.rewards.dto.*;
+import com.rewards.dto.RewardResponse;
 import com.rewards.model.Customer;
+import com.rewards.model.Transaction;
 import com.rewards.service.RewardService;
 import jakarta.validation.Valid;
-import org.slf4j.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDate;
-import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/rewards")
+@RequiredArgsConstructor
 public class RewardController {
 
-    private static final Logger logger = LoggerFactory.getLogger(RewardController.class);
+    private final RewardService rewardService;
 
-    @Autowired
-    private RewardService rewardService;
-
-    @PostMapping
+    /**
+     * Returns rewards for a specific customer for the last 3 months.
+     *
+     * @param customerId ID of the customer
+     * @return RewardResponse with points summary
+     */
+    @GetMapping("/customerRewards/{customerId}")
     public CompletableFuture<ResponseEntity<RewardResponse>> getCustomerRewards(
-            @Valid @RequestBody Customer customer,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-
-        logger.info("Received reward calculation request for customerId: {}", customer.getCustomerId());
-
-        validateCustomer(customer);
-
-        LocalDate today = LocalDate.now();
-        LocalDate endDate = end != null ? end : LocalDate.now();
-        LocalDate startDate = start != null ? start : endDate.minusMonths(3);
-
-        validateDateRange(startDate, endDate, today);
-
-        logger.info("Received reward calculation request for customerId: {}", customer.getCustomerId());
-        logger.info("Calculating rewards from {} to {}", startDate, endDate);
-
-        return rewardService.calculateRewards(customer, startDate, endDate)
-                .thenApply(ResponseEntity::ok);
+            @PathVariable Integer customerId) {
+        log.info("Received request to calculate rewards for customer ID: {}", customerId);
+        return rewardService.calculateRewards(customerId)
+                .thenApply(response -> {
+                    log.info("Calculated total reward points for customer ID {}: {}", customerId,
+                            response.getTotalPoints());
+                    return ResponseEntity.ok(response);
+                });
     }
 
-    @PostMapping("/bulk")
-    public CompletableFuture<ResponseEntity<BulkRewardResponse>> getBulkCustomerRewards(
-            @Valid @RequestBody List<Customer> customers,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-
-        if (customers == null || customers.isEmpty()) {
-            throw new IllegalArgumentException("Customer list cannot be empty.");
-        }
-
-        LocalDate today = LocalDate.now();
-        LocalDate endDate = end != null ? end : LocalDate.now();
-        LocalDate startDate = start != null ? start : endDate.minusMonths(3);
-
-        validateDateRange(startDate, endDate, today);
-
-        List<CompletableFuture<RewardResponse>> futures = customers.stream()
-                .map(customer -> {
-                    validateCustomer(customer);
-                    return rewardService.calculateRewards(customer, startDate, endDate);
-                }).collect(Collectors.toList());
-
-        CompletableFuture<Void> allDoneFuture = CompletableFuture
-                .allOf(futures.toArray(new CompletableFuture[0]));
-
-        return allDoneFuture.thenApply(v -> {
-            List<RewardResponse> results = futures.stream()
-                    .map(CompletableFuture::join)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(new BulkRewardResponse(results));
-        });
+    /**
+     * Adds a customer to the system.
+     *
+     * @param customer The customer to add
+     * @return The added customer
+     */
+    @PostMapping("/customers")
+    public ResponseEntity<Customer> addCustomer(@Valid @RequestBody Customer customer) {
+        log.info("Received request to add new customer: {}", customer.getCustomerName());
+        Customer savedCustomer = rewardService.addCustomer(customer);
+        log.info("Customer added successfully with ID: {}", savedCustomer.getCustomerId());
+        return ResponseEntity.ok(savedCustomer);
     }
 
-    private void validateCustomer(Customer customer) {
-        if (Objects.isNull(customer)) {
-            throw new IllegalArgumentException("Customer request body cannot be null.");
-        }
-
-        if (Objects.isNull(customer.getCustomerId())) {
-            throw new IllegalArgumentException("Customer ID cannot be null.");
-        }
-
-        if (customer.getCustomerName() == null || customer.getCustomerName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Customer name cannot be empty.");
-        }
-
-        if (customer.getTransactions() == null || customer.getTransactions().isEmpty()) {
-            throw new IllegalArgumentException("Customer transactions must be provided.");
-        }
-    }
-
-    private void validateDateRange(LocalDate start, LocalDate end, LocalDate today) {
-        if (start.isAfter(end)) {
-            throw new IllegalArgumentException("Start date cannot be after end date.");
-        }
-        if (end.isAfter(today)) {
-            throw new IllegalArgumentException("End date cannot be in the future.");
-        }
-        if (start.isAfter(today)) {
-            throw new IllegalArgumentException("Start date cannot be in the future.");
-        }
+    /**
+     * Adds a transaction to an existing customer.
+     *
+     * @param customerId  ID of the customer
+     * @param transaction Transaction to add
+     * @return Updated customer with the new transaction
+     */
+    @PostMapping("/customers/{customerId}/transactions")
+    public ResponseEntity<Customer> addTransactionToCustomer(
+            @PathVariable Integer customerId,
+            @Valid @RequestBody Transaction transaction) {
+        log.info("Received request to add transaction (ID: {}) to customer ID: {}",
+                transaction.getTransactionId(), customerId);
+        Customer updatedCustomer = rewardService.addTransaction(customerId, transaction);
+        log.info("Transaction added. Customer ID: {}, New total transactions: {}",
+                customerId, updatedCustomer.getTransactions().size());
+        return ResponseEntity.ok(updatedCustomer);
     }
 }
