@@ -2,6 +2,8 @@ package com.rewards.dto;
 
 import lombok.*;
 import java.util.List;
+import com.rewards.model.MonthlyReward;
+import com.rewards.model.Transaction;
 
 /**
  * Response object representing the reward details for a customer.
@@ -34,26 +36,8 @@ public class RewardResponse {
     private int totalPoints;
 
     /**
-     * Inner static class representing reward points for a specific year and month.
+     * List of Transaction.
      */
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class MonthlyReward {
-        /**
-         * The year for which the rewards were calculated.
-         */
-        private int year;
+    private List<Transaction> transactions;
 
-        /**
-         * The month name (e.g., "July", "August").
-         */
-        private String month;
-
-        /**
-         * Total reward points earned in the specific month.
-         */
-        private int points;
-    }
 }

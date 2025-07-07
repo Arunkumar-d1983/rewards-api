@@ -7,36 +7,19 @@ import com.rewards.service.RewardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import java.util.concurrent.CompletableFuture;
 
-@Slf4j
+@Validated
 @RestController
 @RequestMapping("/api/rewards")
 @RequiredArgsConstructor
+@Slf4j
 public class RewardController {
 
     private final RewardService rewardService;
-
-    /**
-     * Returns rewards for a specific customer for the last 3 months.
-     *
-     * @param customerId ID of the customer
-     * @return RewardResponse with points summary
-     */
-    @GetMapping("/customerRewards/{customerId}")
-    public CompletableFuture<ResponseEntity<RewardResponse>> getCustomerRewards(
-            @PathVariable Integer customerId) {
-        log.info("Received request to calculate rewards for customer ID: {}", customerId);
-        return rewardService.calculateRewards(customerId)
-                .thenApply(response -> {
-                    log.info("Calculated total reward points for customer ID {}: {}", customerId,
-                            response.getTotalPoints());
-                    return ResponseEntity.ok(response);
-                });
-    }
 
     /**
      * Adds a customer to the system.
@@ -49,7 +32,7 @@ public class RewardController {
         log.info("Received request to add new customer: {}", customer.getCustomerName());
         Customer savedCustomer = rewardService.addCustomer(customer);
         log.info("Customer added successfully with ID: {}", savedCustomer.getCustomerId());
-        return ResponseEntity.ok(savedCustomer);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedCustomer);
     }
 
     /**
@@ -68,6 +51,24 @@ public class RewardController {
         Customer updatedCustomer = rewardService.addTransaction(customerId, transaction);
         log.info("Transaction added. Customer ID: {}, New total transactions: {}",
                 customerId, updatedCustomer.getTransactions().size());
-        return ResponseEntity.ok(updatedCustomer);
+        return ResponseEntity.status(HttpStatus.CREATED).body(updatedCustomer);
+    }
+
+    /**
+     * Returns rewards for a specific customer for the given date range.
+     *
+     * @param customerId ID of the customer
+     * @param startDate  Start date of range
+     * @param endDate    End date of range
+     * @return RewardResponse with points summary
+     */
+    @GetMapping("/customerRewards/{customerId}")
+    public ResponseEntity<RewardResponse> getCustomerRewards(
+            @PathVariable Integer customerId,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        log.info("Received request to calculate rewards for customer ID: {}", customerId);
+        RewardResponse response = rewardService.calculateRewards(customerId, startDate, endDate);
+        return ResponseEntity.ok(response);
     }
 }

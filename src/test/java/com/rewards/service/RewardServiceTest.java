@@ -84,20 +84,25 @@ class RewardServiceTest {
      * Test to verify reward calculation for the last 3 months.
      */
     @Test
-    void testCalculateRewards() throws Exception {
+    void testCalculateRewards() {
         List<Transaction> txns = Arrays.asList(
                 new Transaction(1, LocalDate.now().minusDays(10), 150.0, 0),
                 new Transaction(2, LocalDate.now().minusMonths(1), 90.0, 0));
-        Customer customer = new Customer("Arunkumar", 1001, txns);
+
+        Customer customer = new Customer("Arunkumar", 3, txns);
         when(customerRepository.findById(3)).thenReturn(Optional.of(customer));
 
-        CompletableFuture<RewardResponse> future = rewardService.calculateRewards(3);
-        RewardResponse response = future.get();
+        String startDate = LocalDate.now().minusMonths(2).toString(); // e.g., "2025-05-01"
+        String endDate = LocalDate.now().toString(); // e.g., "2025-07-07"
+
+        RewardResponse response = rewardService.calculateRewards(3, startDate, endDate);
 
         assertEquals("Arunkumar", response.getCustomerName());
         assertTrue(response.getTotalPoints() > 0);
         assertFalse(response.getMonthlyRewards().isEmpty());
+        assertEquals(2, response.getTransactions().size());
 
         log.info("testCalculateRewards passed: Total points = {}", response.getTotalPoints());
     }
+
 }

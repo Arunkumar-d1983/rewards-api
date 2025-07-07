@@ -32,8 +32,8 @@ public class Transaction {
      * Amount spent in the transaction.
      * Must be at least 1.0.
      */
-    @Min(value = 1, message = "Transaction amount must be greater than zero.")
-    private double amount;
+    @DecimalMin(value = "1.0", message = "Transaction amount must be greater than zero.")
+    private Double amount;
 
     /**
      * Points earned for this transaction based on reward calculation.

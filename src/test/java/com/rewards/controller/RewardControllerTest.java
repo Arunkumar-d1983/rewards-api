@@ -1,6 +1,8 @@
 package com.rewards.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.rewards.model.*;
 import com.rewards.dto.RewardResponse;
 import com.rewards.service.RewardService;
@@ -14,16 +16,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-
-import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 /**
  * Unit tests for {@link RewardController} using MockMvc and Mockito.
@@ -39,9 +35,6 @@ class RewardControllerTest {
         @MockBean
         private RewardService rewardService;
 
-        @Autowired
-        private ObjectMapper objectMapper;
-
         /**
          * Test for adding a customer.
          * Verifies status code 200 and JSON response contains expected customer name.
@@ -49,13 +42,14 @@ class RewardControllerTest {
         @Test
         void testAddCustomer() throws Exception {
                 Customer customer = new Customer("Arunkumar", 1001, new ArrayList<>());
-                Mockito.when(rewardService.addCustomer(any())).thenReturn(customer);
-                log.info("Testing POST /api/rewards/customers for adding customer: {}", customer.getCustomerName());
+
+                Mockito.when(rewardService.addCustomer(Mockito.any())).thenReturn(customer);
+
                 mockMvc.perform(post("/api/rewards/customers")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(customer)))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.customerName").value("Arunkumar"));
+                                .content(new ObjectMapper().writeValueAsString(customer)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.customerId").value(1001));
         }
 
         /**
@@ -64,45 +58,49 @@ class RewardControllerTest {
          */
         @Test
         void testAddTransaction() throws Exception {
-                Transaction tx = new Transaction(1, LocalDate.now().minusDays(3), 100.0, 0);
-                Customer customer = new Customer("Arunkumar", 1001, new ArrayList<>(Arrays.asList(tx)));
-                Mockito.when(rewardService.addTransaction(Mockito.eq(1001), any(Transaction.class)))
-                                .thenReturn(customer);
-                log.info("Testing POST /api/rewards/customers/1001/transactions for transaction ID: {}",
-                                tx.getTransactionId());
+                Transaction tx = new Transaction(1, LocalDate.now(), 120.0, 60);
+                Customer updatedCustomer = new Customer("Arunkumar", 1001, Arrays.asList(tx));
+
+                Mockito.when(rewardService.addTransaction(Mockito.eq(1001), Mockito.any())).thenReturn(updatedCustomer);
+
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.registerModule(new JavaTimeModule());
+                mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // optional for ISO
+
                 mockMvc.perform(post("/api/rewards/customers/1001/transactions")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(tx)))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.transactions.length()").value(1));
+                                .content(mapper.writeValueAsString(tx)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.transactions[0].transactionId").value(1));
         }
 
         /**
          * Test for retrieving customer reward summary for the last 3 months.
          * Ensures correct response structure and total reward points.
          */
+
         @Test
         void testGetCustomerRewards() throws Exception {
-                List<RewardResponse.MonthlyReward> monthlyRewards = Arrays.asList(
-                                new RewardResponse.MonthlyReward(2025, "JULY", 60));
-                RewardResponse response = new RewardResponse("Arunkumar", 1001, monthlyRewards, 60);
+                List<MonthlyReward> monthlyRewards = Arrays.asList(new MonthlyReward(2025, "JULY", 60));
+                List<Transaction> txns = Arrays.asList(
+                                new Transaction(1, LocalDate.of(2025, 7, 1), 120.0, 60));
 
-                // Use 1001 to match the endpoint URL
-                Mockito.when(rewardService.calculateRewards(1001))
-                                .thenReturn(CompletableFuture.completedFuture(response));
+                RewardResponse response = new RewardResponse("Arunkumar", 1001, monthlyRewards, 60, txns);
 
-                log.info("Testing GET /api/rewards/customerRewards/1001 for reward summary...");
-                // Perform the initial async request
-                MvcResult mvcResult = mockMvc.perform(get("/api/rewards/customerRewards/1001")
+                Mockito.when(rewardService.calculateRewards(1001, "2025-07-01", "2025-07-31"))
+                                .thenReturn(response);
+
+                log.info("Testing GET /api/rewards/customerRewards/1001 with date range...");
+
+                mockMvc.perform(get("/api/rewards/customerRewards/1001")
+                                .param("startDate", "2025-07-01")
+                                .param("endDate", "2025-07-31")
                                 .accept(MediaType.APPLICATION_JSON))
-                                .andExpect(request().asyncStarted())
-                                .andReturn();
-
-                // Now dispatch and verify the actual response
-                mockMvc.perform(asyncDispatch(mvcResult))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.customerName").value("Arunkumar"))
-                                .andExpect(jsonPath("$.totalPoints").value(60));
+                                .andExpect(jsonPath("$.totalPoints").value(60))
+                                .andExpect(jsonPath("$.transactions[0].transactionId").value(1))
+                                .andExpect(jsonPath("$.transactions[0].points").value(60));
 
                 log.info("GET /api/rewards/customerRewards/1001 test passed. Total Points: 60");
         }
