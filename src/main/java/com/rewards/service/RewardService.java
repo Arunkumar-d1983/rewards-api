@@ -20,6 +20,10 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Service layer for managing customer rewards, transactions, and reward
+ * calculations.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,15 @@ public class RewardService {
 
     private final CustomerRepository customerRepository;
 
+    /**
+     * Adds a new customer along with their transactions and calculates reward
+     * points.
+     *
+     * @param customer the customer object to add
+     * @return the saved Customer object
+     * @throws IllegalArgumentException if customer data is invalid or already
+     *                                  exists
+     */
     public Customer addCustomer(Customer customer) {
 
         log.info("Attempting to add new customer: {}", customer);
@@ -45,8 +58,6 @@ public class RewardService {
             log.warn("Customer already exists with ID: {}", customer.getCustomerId());
             throw new IllegalArgumentException("Customer with ID " + customer.getCustomerId() + " already exists.");
         }
-
-        // Calculate points for all transactions
         customer.getTransactions().forEach(tx -> {
             tx.setPoints(RewardCalculator.calculatePoints(tx.getAmount()));
         });
@@ -54,6 +65,14 @@ public class RewardService {
         return customerRepository.save(customer);
     }
 
+    /**
+     * Adds a transaction to an existing customer.
+     *
+     * @param customerId  the customer ID to add the transaction to
+     * @param transaction the transaction to be added
+     * @return the updated Customer object with the new transaction
+     * @throws IllegalArgumentException if input is invalid or customer not found
+     */
     public Customer addTransaction(Integer customerId, @Valid Transaction transaction) {
         log.info("Adding transaction to customer ID: {}", customerId);
         if (transaction == null) {
@@ -84,6 +103,17 @@ public class RewardService {
         return updated;
     }
 
+    /**
+     * Calculates reward points for a customer within the specified date range.
+     * If dates are not provided, the default range is the last 3 months from today.
+     *
+     * @param customerId the customer ID to calculate rewards for
+     * @param start      the start date in format YYYY-MM-DD (optional)
+     * @param end        the end date in format YYYY-MM-DD (optional)
+     * @return RewardResponse containing transaction details, monthly rewards, and
+     *         total points
+     * @throws IllegalArgumentException if date inputs are invalid
+     */
     public RewardResponse calculateRewards(Integer customerId, String start, String end) {
 
         LocalDate now = LocalDate.now();
@@ -98,7 +128,6 @@ public class RewardService {
         } else {
             try {
                 startDate = LocalDate.parse(start);
-                // endDate = LocalDate.parse(end);
                 endDate = end != null ? LocalDate.parse(end) : LocalDate.now();
             } catch (DateTimeParseException e) {
                 throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD.");
@@ -139,8 +168,8 @@ public class RewardService {
 
         int totalPoints = monthlyRewards.stream().mapToInt(MonthlyReward::getPoints).sum();
 
-        return new RewardResponse(customer.getCustomerName(), customerId, monthlyRewards, totalPoints,
-                filteredTransactions);
+        return new RewardResponse(customer.getCustomerName(), customerId, filteredTransactions, monthlyRewards,
+                totalPoints);
     }
 
 }

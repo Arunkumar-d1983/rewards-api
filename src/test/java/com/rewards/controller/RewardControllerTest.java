@@ -85,7 +85,7 @@ class RewardControllerTest {
                 List<Transaction> txns = Arrays.asList(
                                 new Transaction(1, LocalDate.of(2025, 7, 1), 120.0, 60));
 
-                RewardResponse response = new RewardResponse("Arunkumar", 1001, monthlyRewards, 60, txns);
+                RewardResponse response = new RewardResponse("Arunkumar", 1001, txns, monthlyRewards, 60);
 
                 Mockito.when(rewardService.calculateRewards(1001, "2025-07-01", "2025-07-31"))
                                 .thenReturn(response);

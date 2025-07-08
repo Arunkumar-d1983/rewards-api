@@ -6,9 +6,10 @@ import com.rewards.model.MonthlyReward;
 import com.rewards.model.Transaction;
 
 /**
- * Response object representing the reward details for a customer.
- * Contains total reward points earned over the last 3 months,
- * and a breakdown of points earned each month.
+ * Data Transfer Object (DTO) representing the reward details for a customer.
+ * This includes customer information, list of transactions within the reward
+ * period,
+ * a breakdown of monthly reward points, and the total points accumulated.
  */
 @Getter
 @Setter
@@ -26,18 +27,21 @@ public class RewardResponse {
     private int customerId;
 
     /**
-     * List of monthly reward summaries over the past 3 months.
+     * The list of transactions for the customer during the specified reward period.
+     * Each transaction includes date, amount, and calculated reward points.
+     */
+    private List<Transaction> transactions;
+
+    /**
+     * A list containing reward points broken down by month.
+     * Each entry represents the total reward points earned in a particular month.
      */
     private List<MonthlyReward> monthlyRewards;
 
     /**
-     * Total reward points accumulated across all months.
+     * The total number of reward points earned across all months and transactions
+     * within the specified period.
      */
     private int totalPoints;
-
-    /**
-     * List of Transaction.
-     */
-    private List<Transaction> transactions;
 
 }

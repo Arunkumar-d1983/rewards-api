@@ -204,24 +204,6 @@ Optional Query Parameters:
 {
     "customerName": "Arunkumar",
     "customerId": 1001,
-    "monthlyRewards": [
-        {
-            "year": 2025,
-            "month": "MAY",
-            "points": 90
-        },
-        {
-            "year": 2025,
-            "month": "JUNE",
-            "points": 40
-        },
-        {
-            "year": 2025,
-            "month": "JULY",
-            "points": 25
-        }
-    ],
-    "totalPoints": 155,
     "transactions": [
         {
             "transactionId": 1,
@@ -241,7 +223,25 @@ Optional Query Parameters:
             "amount": 75.0,
             "points": 25
         }
-    ]
+    ],
+    "monthlyRewards": [
+        {
+            "year": 2025,
+            "month": "MAY",
+            "points": 90
+        },
+        {
+            "year": 2025,
+            "month": "JUNE",
+            "points": 40
+        },
+        {
+            "year": 2025,
+            "month": "JULY",
+            "points": 25
+        }
+    ],
+    "totalPoints": 155
 }
 ```
 
